@@ -5,7 +5,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-(cd "${root}/backend" && uv run fastapi dev src/backend/main.py --port 8000) &
+(cd "${root}/backend" && uv run uvicorn backend.main:app --app-dir src --reload --port 8000) &
 backend_pid=$!
 
 (cd "${root}/frontend" && npm run dev) &

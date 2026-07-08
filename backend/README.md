@@ -38,8 +38,12 @@ change it corresponds to.
 ## Run
 
 ```powershell
-uv run fastapi dev src/backend/main.py --port 8000
+uv run uvicorn backend.main:app --app-dir src --reload --port 8000
 ```
+
+(Not `fastapi dev` — its startup banner prints an emoji via `rich`, which
+crashes with `UnicodeEncodeError` on a real Windows console using the legacy
+`cp1252` codepage. Plain `uvicorn`'s logging doesn't hit that code path.)
 
 - `GET /health` — liveness check
 - `GET /api/v1/sources` — configured data sources

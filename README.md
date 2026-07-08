@@ -114,7 +114,7 @@ uv run pytest
 cd backend
 uv sync --extra dev      # also resolves the two local retriever packages
 uv run alembic upgrade head
-uv run fastapi dev src\backend\main.py
+uv run uvicorn backend.main:app --app-dir src --reload --port 8000
 ```
 
 ```powershell
