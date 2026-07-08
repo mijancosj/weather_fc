@@ -1,0 +1,40 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+dist/
+build/
+
+# uv.lock files ARE committed on purpose (reproducible installs per package).
+
+# --- Node / frontend ---
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+
+# --- Local data / caches (never commit fetched market data) ---
+data/
+**/data-services/*/data/
+**/backend/data/
+*.duckdb
+*.duckdb.wal
+*.parquet
+
+# --- Secrets ---
+.env
+.env.*.local
+!.env.example
+
+# --- Editors / OS ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

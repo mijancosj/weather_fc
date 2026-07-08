@@ -1,0 +1,51 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "API + orchestration layer for the price discovery platform: aggregates ENTSO-E and Elexon data and serves the dashboard."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "entsoe-retriever",
+    "elexon-retriever",
+    "fastapi[standard]>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic-settings>=2.6",
+    "apscheduler>=3.10",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "alembic>=1.14",
+    "structlog>=24.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.28",
+    "ruff>=0.7",
+]
+
+# Local path dependencies — each sibling package still resolves against its
+# own pyproject.toml/lockfile; this only tells uv where to find the source
+# instead of a package index. Not a shared uv workspace.
+[tool.uv.sources]
+entsoe-retriever = { path = "../data-services/entsoe-retriever", editable = true }
+elexon-retriever = { path = "../data-services/elexon-retriever", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/backend"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
