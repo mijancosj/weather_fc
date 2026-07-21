@@ -18,6 +18,7 @@ node_modules/
 frontend/dist/
 frontend/.vite/
 frontend/coverage/
+frontend/tsconfig.tsbuildinfo
 
 # --- Local data / caches (never commit fetched market data) ---
 data/
@@ -28,9 +29,20 @@ data/
 *.parquet
 
 # --- Secrets ---
+# .env files ARE committed on purpose (one per package) — each is filled with
+# a dummy/local-only placeholder so a fresh clone can just fill in real
+# values and run, no separate .env.example to copy first. After editing a
+# tracked .env with anything real, run
+# `git update-index --skip-worktree <path-to-that-.env>` so local edits are
+# never picked up by `git status`/`git add` (this is per-clone — anyone else
+# cloning the repo needs to run it again for their own copy once they've
+# filled in their own real values).
+#
+# This rule only catches genuinely NEW .env files (e.g. in a future package)
+# before they're first tracked — it has no effect on the ones already
+# tracked above.
 .env
 .env.*.local
-!.env.example
 
 # --- Editors / OS ---
 .vscode/*
