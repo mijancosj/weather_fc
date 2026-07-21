@@ -6,7 +6,7 @@ from esios_retriever import EsiosClient
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api.routes import health, indicators, outages, prices, sources
+from backend.api.routes import health, indicators, internal, outages, prices, sources
 from backend.core.config import get_settings
 from backend.core.logging import configure_logging
 from backend.core.scheduler import start_scheduler
@@ -66,6 +66,7 @@ def create_app() -> FastAPI:
     app.include_router(sources.router)
     app.include_router(indicators.router)
     app.include_router(outages.router)
+    app.include_router(internal.router)
 
     return app
 

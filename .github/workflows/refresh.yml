@@ -1,0 +1,31 @@
+name: Trigger data refresh
+
+# The backend runs on a free-tier host that suspends the process when idle
+# (see docs/deployment.md), so its own in-process scheduler can't be relied
+# on to tick reliably in production. This calls the protected refresh route
+# instead — same effect, driven externally on a schedule GitHub runs for us
+# for free.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/v1/internal/refresh
+        run: |
+          status=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            --max-time 120 \
+            -X POST "${BACKEND_URL}/api/v1/internal/refresh" \
+            -H "X-Refresh-Token: ${REFRESH_TOKEN}")
+          echo "HTTP status: $status"
+          cat /tmp/response.json
+          if [ "$status" != "200" ]; then
+            echo "Refresh failed"
+            exit 1
+          fi
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}

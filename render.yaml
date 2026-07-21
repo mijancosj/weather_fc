@@ -1,0 +1,33 @@
+# Render Blueprint for the backend API. In the Render dashboard: New >
+# Blueprint > connect this repo > it finds this file automatically.
+# See docs/deployment.md for the full walkthrough (Neon/Render/Vercel/GitHub
+# Actions setup, exact env var values, and why the pieces are split this way).
+services:
+  - type: web
+    name: weather-fc-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    # Render checks out the whole repo regardless of rootDir, so the sibling
+    # data-services/* packages this depends on (via [tool.uv.sources] path
+    # deps in pyproject.toml) are still there for uv sync to resolve.
+    buildCommand: pip install uv && uv sync
+    startCommand: uv run uvicorn backend.main:app --app-dir src --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # Secrets and per-deployment values — fill these in in the Render
+      # dashboard after the first deploy, not here (this file is committed).
+      - key: BACKEND_DATABASE_URL
+        sync: false
+      - key: BACKEND_CORS_ORIGINS
+        sync: false
+      - key: BACKEND_REFRESH_TOKEN
+        sync: false
+      - key: ENTSOE_API_TOKEN
+        sync: false
+      - key: ESIOS_API_TOKEN
+        sync: false
+      - key: ELEXON_API_KEY
+        sync: false

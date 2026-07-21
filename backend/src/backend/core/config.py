@@ -38,6 +38,12 @@ class Settings(BaseSettings):
         ["10YES-REE------0", "10YFR-RTE------C"],  # ES-FR
         ["10YES-REE------0", "10YPT-REN------W"],  # ES-PT
     ]
+    # Shared secret for POST /api/v1/internal/refresh — required in
+    # production so an external scheduler (e.g. a GitHub Actions cron) can
+    # trigger a refresh on a host that suspends the process when idle. None
+    # by default, which the route treats as "refresh endpoint disabled" —
+    # local dev doesn't need it since the in-process scheduler already ticks.
+    refresh_token: str | None = None
 
 
 @lru_cache

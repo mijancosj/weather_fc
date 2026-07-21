@@ -20,7 +20,7 @@ weather_fc/
 ├── backend/                  # FastAPI app: orchestrates retrievers, stores in Postgres, serves API
 ├── frontend/                 # React + Vite + TS dashboard
 ├── scripts/                  # bootstrap / dev / db-setup helper scripts (PowerShell + bash)
-└── docs/                     # architecture notes, Postgres setup
+└── docs/                     # architecture notes, Postgres setup, deployment
 ```
 
 ## Why this shape
@@ -110,6 +110,13 @@ cd backend; uv run alembic upgrade head; cd ..
 
 Bash equivalents (`scripts/bootstrap.sh`, `scripts/db-setup.sh`,
 `scripts/dev.sh`) are provided for Git Bash / WSL.
+
+## Deployment
+
+Deployable for free — frontend on Vercel, backend on Render, Postgres on
+Neon, with GitHub Actions driving the scheduled data refresh (Render's free
+tier suspends idle processes, so an external cron replaces relying on an
+always-on scheduler). Full walkthrough: [docs/deployment.md](docs/deployment.md).
 
 ## Working on a single package
 

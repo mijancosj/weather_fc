@@ -44,8 +44,15 @@ export interface Outage {
   period_end: string;
 }
 
+// Empty in dev — relative /api paths go through the Vite proxy
+// (vite.config.ts) to localhost:8000. Set for a production build where the
+// frontend and backend are on different origins (e.g. Vercel + Render) —
+// then this is an absolute URL and the backend's CORS_ORIGINS must include
+// this frontend's origin.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+
 async function get<T>(path: string): Promise<T> {
-  const response = await fetch(`/api${path}`);
+  const response = await fetch(`${API_BASE_URL}/api${path}`);
   if (!response.ok) {
     throw new Error(`Request to ${path} failed: ${response.status}`);
   }
