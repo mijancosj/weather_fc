@@ -1,7 +1,16 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Package-relative, not cwd-relative: pydantic-settings resolves a plain
+# ".env" against the current working directory, which is wrong here — when
+# this package runs embedded in `backend` (whose own cwd is backend/), a
+# relative path would silently miss data-services/entsoe-retriever/.env and
+# fall back to real env vars / backend's own .env instead. This makes the
+# package find its own .env regardless of who imports it or from where.
+_PACKAGE_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 class EntsoeSettings(BaseSettings):
@@ -9,7 +18,7 @@ class EntsoeSettings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="ENTSOE_",
-        env_file=".env",
+        env_file=_PACKAGE_ROOT / ".env",
         extra="ignore",
     )
 

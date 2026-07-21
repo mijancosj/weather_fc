@@ -70,8 +70,41 @@ never hand-edit the schema out of band.
 psql -U price_discovery -d price_discovery -h localhost -c "\dt"
 ```
 
-Should list the `prices` table (and Alembic's own `alembic_version` table)
-after migrations have been applied.
+Should list the `prices` and `indicator_observations` tables (and Alembic's
+own `alembic_version` table) after migrations have been applied.
+
+## Browsing tables and data (pgAdmin 4)
+
+Installed via `winget install --id PostgreSQL.pgAdmin -e`. First launch opens
+in your browser and asks you to set a master password (for pgAdmin itself,
+not Postgres). Then add a server connection:
+
+1. Right-click **Servers → Register → Server...**
+2. **General** tab: any name, e.g. `weather_fc local`
+3. **Connection** tab:
+   - Host: `localhost`
+   - Port: `5432`
+   - Maintenance database: `price_discovery`
+   - Username: `price_discovery`
+   - Password: `price_discovery` (check "Save password")
+
+Once connected: **Servers → weather_fc local → Databases → price_discovery →
+Schemas → public → Tables** lists `prices` and `indicator_observations` —
+right-click a table → **View/Edit Data → All Rows** to browse it, or use the
+**Query Tool** (toolbar icon) to run arbitrary SQL.
+
+### Quicker, no GUI: `psql` cheat-sheet
+
+```powershell
+psql -U price_discovery -d price_discovery -h localhost
+
+\dt                                   -- list tables
+\d prices                             -- describe a table's columns
+SELECT * FROM prices ORDER BY timestamp DESC LIMIT 20;
+SELECT source, indicator_id, COUNT(*), MIN(timestamp), MAX(timestamp)
+  FROM indicator_observations GROUP BY source, indicator_id;
+\q                                     -- quit
+```
 
 ## Moving to the cloud later
 

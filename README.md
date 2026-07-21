@@ -15,7 +15,8 @@ and nothing else needs a server process to run.
 weather_fc/
 ├── data-services/
 │   ├── entsoe-retriever/     # async REST client for ENTSO-E Transparency Platform (API token)
-│   └── elexon-retriever/     # async REST client for Elexon Insights Solution (BMRS)
+│   ├── elexon-retriever/     # async REST client for Elexon Insights Solution (BMRS)
+│   └── esios-retriever/      # async REST client for ESIOS / Red Eléctrica de España (API token)
 ├── backend/                  # FastAPI app: orchestrates retrievers, stores in Postgres, serves API
 ├── frontend/                 # React + Vite + TS dashboard
 ├── scripts/                  # bootstrap / dev / db-setup helper scripts (PowerShell + bash)
@@ -24,31 +25,37 @@ weather_fc/
 
 ## Why this shape
 
-- **Retrievers are libraries, not services.** `entsoe-retriever` and
-  `elexon-retriever` each expose a small async client + pydantic models + an
-  optional local cache. They know nothing about FastAPI, Postgres, dashboards,
-  or each other. You can `uv sync` and use either one standalone in a
-  notebook or script.
+- **Retrievers are libraries, not services.** `entsoe-retriever`,
+  `elexon-retriever`, and `esios-retriever` each expose a small async client +
+  pydantic models + an optional local cache. They know nothing about FastAPI,
+  Postgres, dashboards, or each other. You can `uv sync` and use any one
+  standalone in a notebook or script.
 - **The backend composes retrievers, it doesn't own them.** `backend`
-  declares `entsoe-retriever` and `elexon-retriever` as regular dependencies,
-  resolved locally via `uv`'s path-source feature (`[tool.uv.sources]`,
-  `editable = true`). Each still resolves against its own lockfile
-  independently — this is not a shared uv workspace. Adding a third data
-  source (e.g. Nord Pool) later means: new sibling folder under
-  `data-services/`, one new line in `backend/pyproject.toml`.
-- **Both retrievers call official REST APIs.** `entsoe-retriever` calls the
-  ENTSO-E Transparency Platform's Web API with a security token (generated
-  from your account, not your login password) and parses its XML response.
-  `elexon-retriever` calls Elexon's Insights Solution REST API directly with
-  `httpx`. Neither drives a browser or scrapes a webpage — both go through
-  the method each provider actually intends for programmatic access.
+  declares all three retrievers as regular dependencies, resolved locally via
+  `uv`'s path-source feature (`[tool.uv.sources]`, `editable = true`). Each
+  still resolves against its own lockfile independently — this is not a
+  shared uv workspace. Adding another data source later means: new sibling
+  folder under `data-services/`, one new line in `backend/pyproject.toml`.
+- **Every retriever calls its provider's official REST API.**
+  `entsoe-retriever` calls the ENTSO-E Transparency Platform's Web API with a
+  security token (generated from your account, not your login password) and
+  parses its XML response. `elexon-retriever` calls Elexon's Insights
+  Solution REST API directly with `httpx`. `esios-retriever` calls REE's
+  ESIOS API (`api.esios.ree.es`) with a personal token. None of them drive a
+  browser or scrape a webpage — all three go through the method each
+  provider actually intends for programmatic access.
 - **Cache is a client-level concern, not an architectural commitment.** Every
   retriever client takes a `use_cache` flag per call. Fetch on the fly during
   development, flip caching on once you're hitting rate limits or want
   reproducible historical pulls. The cache is just local Parquet files read
   back through DuckDB — no server, nothing to run.
-- **Persistence is Postgres, reached only through the backend.** The backend
-  is the only thing that talks to Postgres — via SQLAlchemy's async engine,
+- **Persistence is Postgres, reached only through the backend, in two
+  shapes.** A `prices` table holds money-denominated day-ahead prices,
+  normalized the same way across every source. A separate
+  `indicator_observations` table holds everything else ESIOS publishes
+  (demand, generation by technology, and dozens of other indicators) —
+  configurable via `BACKEND_ESIOS_INDICATOR_IDS`, since that data doesn't fit
+  the price shape. Both are reached only through SQLAlchemy's async engine,
   with schema managed by Alembic migrations. The frontend never touches the
   database directly; it only calls the backend's REST API, which is what
   makes "run this in the cloud" mostly a matter of pointing
@@ -84,10 +91,13 @@ the database setup.
 # configure secrets (per package — see each package's .env.example)
 copy data-services\entsoe-retriever\.env.example data-services\entsoe-retriever\.env
 copy data-services\elexon-retriever\.env.example data-services\elexon-retriever\.env
+copy data-services\esios-retriever\.env.example data-services\esios-retriever\.env
 copy backend\.env.example backend\.env
 # edit entsoe-retriever/.env: set ENTSOE_API_TOKEN (a security token from your
 # transparency.entsoe.eu account, not your login password — see that
 # package's README for where to generate one)
+# edit esios-retriever/.env: set ESIOS_API_TOKEN (request via email — see
+# that package's README)
 
 # set up Postgres (see docs/postgres-setup.md), then:
 .\scripts\db-setup.ps1
@@ -125,10 +135,16 @@ npm run dev
 
 ## Data sources
 
+In-focus markets: **France, Spain, Portugal, and the UK**.
+
 | Source | Package | Coverage | Auth |
 | --- | --- | --- | --- |
-| ENTSO-E Transparency Platform | `data-services/entsoe-retriever` | EU day-ahead prices, per bidding zone | API token (free, self-service) |
-| Elexon Insights Solution (BMRS) | `data-services/elexon-retriever` | GB market index / system prices | Optional API key for higher rate limits |
+| ENTSO-E Transparency Platform | `data-services/entsoe-retriever` | FR/ES/PT day-ahead prices + full generation-by-technology mix, per bidding zone (any EIC area, configurable) | API token (free, self-service) |
+| Elexon Insights Solution (BMRS) | `data-services/elexon-retriever` | GB market index / system prices (ENTSO-E has no GB data post-Brexit — confirmed live) | Optional API key for higher rate limits |
+| ESIOS (Red Eléctrica de España) | `data-services/esios-retriever` | ES day-ahead price + any of ESIOS's other indicators (demand, generation by technology, ...) | Personal token, request via email (free) |
 
-Adding a new source follows the same recipe both packages use — see
+Adding a new ENTSO-E-covered country is a config change
+(`BACKEND_ENTSOE_AREAS`), not new code — see
+[docs/architecture.md](docs/architecture.md#country-coverage-fr-es-pt-via-entso-e-gb-via-elexon).
+Adding an entirely new source follows the retriever-package recipe — see
 [docs/architecture.md](docs/architecture.md#adding-a-new-data-source).

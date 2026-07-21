@@ -75,7 +75,9 @@ class ElexonClient:
         )
         if response.status_code != httpx.codes.OK:
             raise ElexonApiError(response.status_code, response.text)
-        return response.json()
+        # The real response wraps the row list in {"metadata": {...}, "data": [...]}
+        # — confirmed against the live API, not documented anywhere obvious.
+        return response.json()["data"]
 
     def _auth_headers(self) -> dict[str, str]:
         if self.settings.api_key:
@@ -88,6 +90,7 @@ def _parse_market_index_payload(payload: list[dict]) -> MarketIndexPriceSeries:
         MarketIndexPrice(
             settlement_date=item["settlementDate"],
             settlement_period=item["settlementPeriod"],
+            start_time=item["startTime"],
             price_gbp_mwh=item["price"],
             volume_mwh=item.get("volume"),
             data_provider=item["dataProvider"],

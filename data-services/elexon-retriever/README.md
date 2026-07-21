@@ -36,6 +36,18 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
+## Things that only surfaced against the real API
+
+- **Response is wrapped, not a bare list.** The real payload is
+  `{"metadata": {...}, "data": [...]}` — the row list is under `"data"`. This
+  was never caught by the original mocked test (which mocked a bare list),
+  only found once actually run against the live API.
+- **Use `startTime`, not `settlementDate` alone.** A day has 48 half-hourly
+  settlement periods sharing the same `settlementDate` — `MarketIndexPrice`
+  captures the real per-period `start_time` so each period gets a distinct
+  timestamp downstream (combining `settlementDate` with midnight, as an
+  earlier version of the caller did, collapsed all 48 periods onto one row).
+
 ## Tests
 
 ```powershell

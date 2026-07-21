@@ -1,10 +1,10 @@
 # backend
 
-FastAPI app that composes `entsoe-retriever` and `elexon-retriever` (both
-REST API clients) into one normalized price feed, persists it in Postgres,
-and serves it to the frontend dashboard.
+FastAPI app that composes `entsoe-retriever`, `elexon-retriever`, and
+`esios-retriever` (all REST API clients) into normalized price + indicator
+feeds, persists them in Postgres, and serves them to the frontend dashboard.
 
-It depends on the two retriever packages as regular dependencies, resolved
+It depends on the three retriever packages as regular dependencies, resolved
 locally via `uv`'s editable path sources (see `[tool.uv.sources]` in
 `pyproject.toml`) — each retriever still has its own lockfile and venv when
 worked on standalone; the backend just also builds against them.
@@ -17,8 +17,9 @@ copy .env.example .env
 ```
 
 Make sure the sibling packages have their own `.env` files configured too
-(`data-services/entsoe-retriever/.env`, `data-services/elexon-retriever/.env`)
-— this process imports and runs their client code directly.
+(`data-services/entsoe-retriever/.env`, `data-services/elexon-retriever/.env`,
+`data-services/esios-retriever/.env`) — this process imports and runs their
+client code directly.
 
 ### Database
 
@@ -47,13 +48,31 @@ crashes with `UnicodeEncodeError` on a real Windows console using the legacy
 
 - `GET /health` — liveness check
 - `GET /api/v1/sources` — configured data sources
-- `GET /api/v1/prices/day-ahead?source=entsoe&area=10Y1001A1001A82H` — normalized price rows from Postgres
+- `GET /api/v1/prices/day-ahead?source=entsoe&area=10YFR-RTE------C` — normalized price rows from Postgres (`source` one of `entsoe`, `elexon`, `esios`; `area` an EIC code for entsoe rows, a short code like `GB`/`ES` for elexon/esios rows)
+- `GET /api/v1/indicators/catalog` — live list of every indicator ESIOS publishes (discovery — doesn't touch Postgres)
+- `GET /api/v1/indicators/{indicator_id}/preview?days=7` — live one-off fetch of a single indicator, doesn't touch Postgres either; check what an indicator looks like before deciding to track it
+- `GET /api/v1/indicators/observations?source=entsoe&geo_name=FR` — stored, scheduler-refreshed indicator observations from Postgres, optionally filtered by area (`geo_name`, e.g. `FR`/`ES`/`PT`). Always populated for every area in `BACKEND_ENTSOE_AREAS` with three families of `indicator_id` (see `entsoe-retriever`'s README for the psrType-to-name mapping):
+  - `generation:{psrType}:{area}` — actual generation by technology
+  - `generation_forecast:{psrType}:{area}` — day-ahead wind/solar forecast
+  - `load:forecast:{area}` / `load:actual:{area}` — total system load
+
+  For ESIOS (`source=esios`), only for IDs configured in `BACKEND_ESIOS_INDICATOR_IDS`.
 
 A background job (APScheduler, see `core/scheduler.py`) refreshes Postgres
-from both retrievers every `BACKEND_REFRESH_INTERVAL_MINUTES` minutes. A
-failed refresh (e.g. a missing/expired API token, an upstream outage) is
-logged and skipped — it doesn't crash the API, it just leaves last-known-good
-data in place until the next tick.
+every `BACKEND_REFRESH_INTERVAL_MINUTES` minutes, via five independent jobs:
+day-ahead prices from all sources across every area in `BACKEND_ENTSOE_AREAS`
+(default: FR, ES, PT) plus Elexon for GB; ENTSO-E generation-by-type, the
+wind/solar forecast, and load (forecast + actual) for the same areas; and
+whichever ESIOS indicators are configured in `BACKEND_ESIOS_INDICATOR_IDS`
+(empty by default). All the ENTSO-E jobs isolate failures per-area as well
+as per-source — one country's fetch failing (rate limit, transient outage)
+doesn't block the others.
+
+**GB has no ENTSO-E data** (confirmed live: ENTSO-E returns "No matching
+data found" for GB's day-ahead price and generation documents, consistent
+with post-Brexit market decoupling) — it's deliberately excluded from
+`BACKEND_ENTSOE_AREAS`. Elexon is GB's only source here, and only for
+prices; there's no UK generation-by-type source wired up yet.
 
 ## Tests
 

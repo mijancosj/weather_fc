@@ -10,6 +10,7 @@ dependencies = [
     "pydantic-settings>=2.6",
     "polars>=1.12",
     "duckdb>=1.1",
+    "pyarrow>=17.0",  # duckdb's .pl() (used by ParquetCache reads) needs this at runtime
     "tenacity>=9.0",
 ]
 

@@ -1,12 +1,13 @@
 [project]
 name = "backend"
 version = "0.1.0"
-description = "API + orchestration layer for the price discovery platform: aggregates ENTSO-E and Elexon data and serves the dashboard."
+description = "API + orchestration layer for the price discovery platform: aggregates ENTSO-E, Elexon, and ESIOS data and serves the dashboard."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "entsoe-retriever",
     "elexon-retriever",
+    "esios-retriever",
     "fastapi[standard]>=0.115",
     "uvicorn[standard]>=0.32",
     "pydantic-settings>=2.6",
@@ -31,6 +32,7 @@ dev = [
 [tool.uv.sources]
 entsoe-retriever = { path = "../data-services/entsoe-retriever", editable = true }
 elexon-retriever = { path = "../data-services/elexon-retriever", editable = true }
+esios-retriever = { path = "../data-services/esios-retriever", editable = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -10,20 +10,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 _PACKAGE_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
-class ElexonSettings(BaseSettings):
-    """Runtime configuration for the Elexon Insights Solution client."""
+class EsiosSettings(BaseSettings):
+    """Runtime configuration for the ESIOS client, sourced from env vars / .env."""
 
     model_config = SettingsConfigDict(
-        env_prefix="ELEXON_",
+        env_prefix="ESIOS_",
         env_file=_PACKAGE_ROOT / ".env",
         extra="ignore",
     )
 
-    api_key: str | None = Field(
+    api_token: str | None = Field(
         default=None,
-        description="Optional bearer token for higher-rate-limit Elexon endpoints.",
+        description="Personal token issued by REE (request via consultasios@ree.es).",
     )
-    base_url: str = "https://data.elexon.co.uk/bmrs/api/v1"
+    base_url: str = "https://api.esios.ree.es"
     request_timeout_seconds: float = 30.0
     max_retries: int = 3
     cache_dir: str = "data/cache"
@@ -31,5 +31,5 @@ class ElexonSettings(BaseSettings):
 
 
 @lru_cache
-def get_settings() -> ElexonSettings:
-    return ElexonSettings()
+def get_settings() -> EsiosSettings:
+    return EsiosSettings()
