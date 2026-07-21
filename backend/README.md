@@ -13,10 +13,11 @@ worked on standalone; the backend just also builds against them.
 
 ```powershell
 uv sync --extra dev
-copy .env.example .env
 ```
 
-Make sure the sibling packages have their own `.env` files configured too
+`.env` is already checked in with local-dev defaults (Postgres URL) — nothing
+to fill in here unless you're pointing at a different database. Make sure
+the sibling packages have their own `.env` files filled in too
 (`data-services/entsoe-retriever/.env`, `data-services/elexon-retriever/.env`,
 `data-services/esios-retriever/.env`) — this process imports and runs their
 client code directly.

@@ -9,12 +9,15 @@ Spanish power market indicators — each identified by a numeric indicator ID.
 
 ```powershell
 uv sync --extra dev
-copy .env.example .env
+# edit .env (already checked in with a dummy placeholder), set ESIOS_API_TOKEN
 ```
 
 `ESIOS_API_TOKEN` is a personal token, requested by emailing
 **consultasios@ree.es** with subject line `Personal token request` and your
 registered email in the body. Usually granted within ~24h, free.
+
+After pasting a real token, run `git update-index --skip-worktree .env` so
+your local edit is never picked up by `git status`/`git add`.
 
 ## Finding indicator IDs
 

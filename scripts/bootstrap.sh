@@ -21,7 +21,7 @@ echo "==> npm install in frontend"
 
 echo
 echo "Done. Remaining one-time steps:"
-echo "  1. Copy each .env.example to .env and fill in secrets."
+echo "  1. Fill in the .env in each package (already checked in with dummy placeholders)."
 echo "  2. Set up Postgres if you haven't: see docs/postgres-setup.md, then ./scripts/db-setup.sh"
 echo "  3. cd backend && uv run alembic upgrade head"
 echo "  4. ./scripts/dev.sh"

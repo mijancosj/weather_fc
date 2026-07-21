@@ -88,16 +88,17 @@ the database setup.
 # one-time setup: creates a venv per Python package + npm install for frontend
 .\scripts\bootstrap.ps1
 
-# configure secrets (per package — see each package's .env.example)
-copy data-services\entsoe-retriever\.env.example data-services\entsoe-retriever\.env
-copy data-services\elexon-retriever\.env.example data-services\elexon-retriever\.env
-copy data-services\esios-retriever\.env.example data-services\esios-retriever\.env
-copy backend\.env.example backend\.env
+# configure secrets — each package already has a .env checked in with
+# dummy/local-only placeholders (see each package's README); just edit them
+# in place, no copying needed
 # edit entsoe-retriever/.env: set ENTSOE_API_TOKEN (a security token from your
 # transparency.entsoe.eu account, not your login password — see that
 # package's README for where to generate one)
 # edit esios-retriever/.env: set ESIOS_API_TOKEN (request via email — see
 # that package's README)
+# after editing any .env with a real secret, run:
+#   git update-index --skip-worktree <path-to-that-.env>
+# so your local edits are never picked up by git status/git add
 
 # set up Postgres (see docs/postgres-setup.md), then:
 .\scripts\db-setup.ps1

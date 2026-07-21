@@ -25,7 +25,7 @@ Pop-Location
 
 Write-Host ""
 Write-Host "Done. Remaining one-time steps:"
-Write-Host "  1. Copy each .env.example to .env and fill in secrets."
+Write-Host "  1. Fill in the .env in each package (already checked in with dummy placeholders)."
 Write-Host "  2. Set up Postgres if you haven't: see docs/postgres-setup.md, then .\scripts\db-setup.ps1"
 Write-Host "  3. cd backend; uv run alembic upgrade head"
 Write-Host "  4. .\scripts\dev.ps1"

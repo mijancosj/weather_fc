@@ -44,7 +44,7 @@ This creates:
   default — change it and update `BACKEND_DATABASE_URL` together).
 - Database `price_discovery`, owned by that role.
 
-Matches the default in `backend/.env.example`:
+Matches the default already checked into `backend/.env`:
 
 ```
 BACKEND_DATABASE_URL=postgresql+asyncpg://price_discovery:price_discovery@localhost:5432/price_discovery

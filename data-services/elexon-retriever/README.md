@@ -11,10 +11,12 @@ completely on its own).
 
 ```powershell
 uv sync --extra dev
-copy .env.example .env
 ```
 
-An API key is optional for the endpoints this client currently uses.
+`.env` is already checked in — an API key is optional for the endpoints this
+client currently uses, so there's nothing required to fill in. If you add
+one, run `git update-index --skip-worktree .env` afterward so your local
+edit is never picked up by `git status`/`git add`.
 
 ## Usage
 

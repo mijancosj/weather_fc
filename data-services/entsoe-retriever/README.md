@@ -30,9 +30,11 @@ GB), that's exchange-level data (EPEX SPOT, OMIE, ...), not TSO data.
 
 ```powershell
 uv sync --extra dev
-copy .env.example .env
-# edit .env, set ENTSOE_API_TOKEN
+# edit .env (already checked in with a dummy placeholder), set ENTSOE_API_TOKEN
 ```
+
+After pasting a real token, run `git update-index --skip-worktree .env` so
+your local edit is never picked up by `git status`/`git add`.
 
 `ENTSOE_API_TOKEN` is a security token, not your account password — log in at
 transparency.entsoe.eu, then go to *My Account Settings > Web API Security

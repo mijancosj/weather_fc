@@ -1,4 +1,4 @@
-# Creates the app-scoped Postgres role + database used by backend/.env.example's
+# Creates the app-scoped Postgres role + database used by backend/.env's
 # default BACKEND_DATABASE_URL. Run once, after PostgreSQL itself is installed
 # and running (see docs/postgres-setup.md). Safe to re-run — skips what already exists.
 
