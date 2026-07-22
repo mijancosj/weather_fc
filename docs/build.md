@@ -128,6 +128,25 @@ deferred rather than fixed. Likely cause: either the same trailing-newline
 issue on `ESIOS_API_TOKEN`, or the token hasn't actually been approved yet by
 REE (requested via emailing consultasios@ree.es, can take ~24h).
 
+### 8. GitHub Actions: `Error: Process completed with exit code 28`
+
+Exit code 28 is **curl's own timeout code** — the request never got a
+response at all within the configured `--max-time`, as opposed to an HTTP
+error status. A cold start stacks two separate wake-ups: Render's own
+process boot (uv resolving the local packages, uvicorn, DB pool,
+APScheduler) *and* Neon's free tier separately autosuspending its compute
+and needing its own wake-up on the first query after a while. Confirmed
+live: combined, this occasionally exceeded the original 60s budget,
+especially when Render happened to be mid-restart already (visible in its
+logs as a `Shutting down...` / `Started server process [...]` pair right
+around the time the request came in — a routine wake-from-sleep restart,
+not a new deploy).
+
+**Fix:** `.github/workflows/refresh.yml` now retries up to 3 times with a
+120s per-attempt timeout before giving up, which comfortably covers a slow
+double-wake-up without masking a genuine failure (a real auth/config
+problem still fails fast and reports clearly rather than retrying blindly).
+
 ## Quick health-check sequence for next time
 
 1. `curl https://<render-url>/health` → should be `200`.
