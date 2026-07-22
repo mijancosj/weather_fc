@@ -16,14 +16,20 @@ jobs:
     steps:
       - name: POST /api/v1/internal/refresh
         run: |
+          # The route responds as soon as the refresh is *triggered* (202),
+          # not once it's finished — waiting for full completion risked
+          # exceeding Render's own proxy timeout on a cold start (seen live
+          # as a 502 from Render, not an application error). 60s here just
+          # covers the wake-up-from-sleep + auth-check latency, not the
+          # refresh itself, which continues in the background afterward.
           status=$(curl -s -o /tmp/response.json -w "%{http_code}" \
-            --max-time 120 \
+            --max-time 60 \
             -X POST "${BACKEND_URL}/api/v1/internal/refresh" \
             -H "X-Refresh-Token: ${REFRESH_TOKEN}")
           echo "HTTP status: $status"
           cat /tmp/response.json
-          if [ "$status" != "200" ]; then
-            echo "Refresh failed"
+          if [ "$status" != "202" ]; then
+            echo "Refresh trigger failed"
             exit 1
           fi
         env:

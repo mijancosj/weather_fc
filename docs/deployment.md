@@ -100,8 +100,11 @@ call the same idempotent `refresh_all()`, and it's what makes local dev via
    runs on a `*/30 * * * *` cron automatically — nothing else to do. You can
    trigger it manually from the Actions tab (`workflow_dispatch`) to verify
    it works before waiting for the schedule.
-3. Verify: after a manual run, check the Render service logs for
-   `price_refresh.done`, `entsoe_generation_refresh.done`, etc., and query
+3. The route returns as soon as the refresh is *triggered* (`202`), not once
+   it's finished — a green check on the Action just means Render accepted
+   the request. Verify actual completion separately: after a manual run,
+   check the Render service logs for `price_refresh.done`,
+   `entsoe_generation_refresh.done`, etc., and query
    `/api/v1/prices/day-ahead` on the Render URL to confirm fresh rows are
    landing in Neon.
 
