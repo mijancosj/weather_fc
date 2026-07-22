@@ -49,7 +49,10 @@ export interface Outage {
 // frontend and backend are on different origins (e.g. Vercel + Render) —
 // then this is an absolute URL and the backend's CORS_ORIGINS must include
 // this frontend's origin.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+// Strip a trailing slash defensively — a value like "https://host/" would
+// otherwise produce a double slash ("https://host//api/...") that 404s,
+// confirmed live when the deployed env var included one.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
 
 async function get<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}/api${path}`);
