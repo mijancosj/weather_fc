@@ -19,13 +19,32 @@ jobs:
           # The route responds as soon as the refresh is *triggered* (202),
           # not once it's finished — waiting for full completion risked
           # exceeding Render's own proxy timeout on a cold start (seen live
-          # as a 502 from Render, not an application error). 60s here just
-          # covers the wake-up-from-sleep + auth-check latency, not the
-          # refresh itself, which continues in the background afterward.
-          status=$(curl -s -o /tmp/response.json -w "%{http_code}" \
-            --max-time 60 \
-            -X POST "${BACKEND_URL}/api/v1/internal/refresh" \
-            -H "X-Refresh-Token: ${REFRESH_TOKEN}")
+          # as a 502 from Render, not an application error).
+          #
+          # Separately, the request can time out before Render even starts
+          # responding: a cold start stacks Render's own process boot (uv
+          # resolving packages, uvicorn, DB pool, APScheduler) on top of
+          # Neon's free tier separately autosuspending its compute and
+          # needing its own wake-up on the first query — confirmed live to
+          # occasionally exceed 60s combined. curl reports that as its own
+          # exit code 28 (timeout), not an HTTP status, since no response
+          # ever arrived. A generous per-attempt timeout plus a couple of
+          # retries covers a slow wake without masking a real failure.
+          status="000"
+          for attempt in 1 2 3; do
+            set +e
+            status=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+              --max-time 120 \
+              -X POST "${BACKEND_URL}/api/v1/internal/refresh" \
+              -H "X-Refresh-Token: ${REFRESH_TOKEN}")
+            curl_exit=$?
+            set -e
+            if [ "$curl_exit" -eq 0 ]; then
+              break
+            fi
+            echo "Attempt $attempt: curl exited $curl_exit (likely still waking up), retrying..."
+            sleep 15
+          done
           echo "HTTP status: $status"
           cat /tmp/response.json
           if [ "$status" != "202" ]; then
