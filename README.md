@@ -1,5 +1,11 @@
 # weather_fc — Power Price Discovery Platform
 
+**Live dashboard: [weather-fc-orcin.vercel.app](https://weather-fc-orcin.vercel.app/)**
+(frontend on Vercel, backend on Render, Postgres on Neon — see
+[docs/deployment.md](docs/deployment.md) for the how-to and
+[docs/build.md](docs/build.md) for the actual walkthrough/troubleshooting log
+from setting this instance up.)
+
 A modular platform for European/GB power price discovery: pull day-ahead and
 related market data from multiple grid/market operators, normalize it, store
 it in Postgres, and serve dashboards on top of it.
@@ -117,6 +123,8 @@ Deployable for free — frontend on Vercel, backend on Render, Postgres on
 Neon, with GitHub Actions driving the scheduled data refresh (Render's free
 tier suspends idle processes, so an external cron replaces relying on an
 always-on scheduler). Full walkthrough: [docs/deployment.md](docs/deployment.md).
+For the real account-by-account steps and gotchas hit setting up the live
+instance above, see [docs/build.md](docs/build.md).
 
 ## Working on a single package
 
